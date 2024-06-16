@@ -1,0 +1,26 @@
+table th:nth-child(2),
+table th:nth-child(3) {
+    width: 37%;
+}
+
+table td:last-child {
+    opacity: 0;
+}
+
+td button {
+    background: none;
+    border: none;
+    border-radius: 50px;
+    aspect-ratio: 1;
+    padding: 10px;
+    transition: 0.25s;
+}
+
+td button:hover {
+    background-color: #ffffffa5;
+}
+
+td button span {
+    font-variation-settings: 'opsz' 48;
+    scale: 1.25;
+}

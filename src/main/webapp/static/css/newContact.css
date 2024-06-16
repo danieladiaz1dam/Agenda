@@ -1,0 +1,146 @@
+#title {
+    justify-content: space-between;
+    max-width: var(--max-width);
+}
+
+form {
+    background-color: var(--bg-secondary);
+    padding: 30px;
+    border-radius: 10px;
+    margin: 25px;
+}
+
+select {
+    cursor: pointer;
+}
+
+#fields {
+    max-width: var(--max-width);
+}
+
+#fields input {
+    margin: 10px 0;
+    width: 100%;
+    border-radius: 5px;
+    border: 1px solid black;
+    padding: 0.3rem .3rem;
+    caret-color: var(--color-secondary);
+}
+
+#fields input:focus {
+    border: 3px solid var(--color-secondary);
+    outline: none;
+}
+
+button.remove-field {
+    position: relative;
+}
+
+button.remove-field .material-symbols-rounded {
+    position: absolute;
+    left: 15px;
+    bottom: -13px;
+}
+
+button.remove-field .material-symbols-rounded {
+    cursor: pointer;
+}
+
+button.remove-field .material-symbols-rounded:hover {
+    color: red;
+}
+
+.remove-field {
+    background: none;
+    border: none;
+    border-radius: 50%;
+}
+
+p.field {
+    display: flex;
+    align-items: center;
+}
+
+button.add {
+    background-color: var(--color-primary);
+    border: none;
+    border-radius: 100px;
+    height: 2rem;
+    width: 100%;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+@media (max-height: 400px), screen and (max-width: 840px) {
+    #fields {
+        width: 100%;
+    }
+}
+
+#tagListContainer {
+    margin-bottom: 25px;
+}
+
+.tag-item {
+    border: 2px solid var(--font-secondary);
+    padding: 2px 6px;
+    margin: 0 10px 10px 0;
+    border-radius: 10px;
+}
+
+select {
+    background: var(--color-primary);
+    border: none;
+    padding: .2rem .5rem;
+    border-radius: 10px;
+}
+
+select:hover {
+    background: var(--color-primary-opacity);
+}
+
+button[type="submit"]:hover {
+    box-shadow: 0 3px 5px #6e6e6e;
+}
+
+button[type="submit"] {
+    background: var(--color-secondary);
+    color: white;
+    padding: 0.35rem 1rem;
+    border: none;
+    border-radius: 15px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* Quitar flechitas del input type=number */
+/* Chrome, Safari, Edge, Opera */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* Hacer que no se pueda seleccionar */
+#favorite-label input[type=checkbox] {
+    -user-select: none;
+    /* Standard syntax */
+    -webkit-user-select: none;
+    /* Safari */
+    -khtml-user-select: none;
+    /* Chrome/KHTML */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* IE/Edge */
+    display: none;
+}
+
+#favorite-label * {
+    font-size: 2rem;
+}

@@ -1,0 +1,277 @@
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap');
+
+:root {
+    --bg-primary: #f0f0f0;
+    --bg-secondary: #fff;
+    --color-primary: #e3c2ff;
+    --color-primary-opacity: #e3c2ff90;
+    --color-secondary: #a20bd0;
+    --color-tertiary: #d5c1e6;
+    --color-fav: #f4a0dc;
+    --font-primary: #222;
+    --font-secondary: #222222c0;
+    --font-selected: #200035;
+
+    --max-width: 680px;
+    font-size: 18px !important;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "M PLUS Rounded 1c", sans-serif;
+}
+
+html {
+    background-color: var(--bg-primary);
+    font-weight: 500;
+}
+
+.material-symbols-rounded {
+    font-variation-settings: 'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24
+}
+
+.fill {
+    font-variation-settings: 'FILL' 1
+}
+
+
+/* ------------ NAVBAR ------------ */
+
+.navbar {
+    position: fixed;
+    height: 100vh;
+    padding: 0 15px;
+}
+
+.navbar .material-symbols-rounded {
+    margin-right: 7px;
+}
+
+.navbar-nav {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    height: 100%;
+}
+
+.logo .nav-link {
+    font-size: 2rem !important;
+    font-weight: 800;
+    text-align: center;
+    display: block;
+    margin: 0;
+    left: -15px;
+    position: relative;
+}
+
+.nav-item,
+.logo {
+    width: 90%;
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-item:last-child {
+    margin-top: auto;
+    margin-bottom: 20px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    height: 2.5rem;
+    text-decoration: none;
+    color: var(--font-primary);
+    font-size: 1.1rem;
+    width: 100%;
+    padding-left: 20px;
+    border-radius: 25px;
+}
+
+.nav-item:not(:first-child):hover .nav-link {
+    background-color: var(--color-tertiary);
+    color: var(--font-selected);
+}
+
+.nav-item:nth-child(2) .nav-link {
+    background-color: var(--color-primary);
+    color: var(--font-selected);
+    transition: .1s;
+    height: 3rem;
+    border-radius: 20px;
+}
+
+.nav-item:nth-child(2):hover .nav-link {
+    background-color: var(--color-primary);
+    color: var(--font-selected);
+    box-shadow: 0 5px 7px #6e6e6e;
+}
+
+.active {
+    background-color: var(--color-primary);
+    color: var(--font-selected);
+    transition: .1s;
+    border-radius: 25px;
+}
+
+@media (min-width: 992px) {
+    .navbar {
+        width: 15rem;
+    }
+
+    #body {
+        margin-left: 15rem;
+    }
+}
+
+/* ------------ NAVBAR ------------ */
+
+
+/* ------------ BODY ------------ */
+
+#body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 1px;
+}
+
+
+#wrapper {
+    display: block;
+    background-color: var(--bg-secondary);
+    padding: 30px;
+    border-radius: 10px;
+    margin: 25px;
+    width: 100%;
+    height: calc(100% - 50px);
+    box-sizing: border-box;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+/* ------------ BODY ------------ */
+
+
+/* ------------ FORM ------------ */
+
+form {
+    background-color: var(--bg-secondary);
+    padding: 30px;
+    border-radius: 10px;
+    width: 100%;
+    height: calc(100% - 100px);
+    margin: 25px;
+}
+
+input {
+    font-size: 1.2rem;
+}
+
+.small-field {
+    width: 20% !important;
+}
+
+/* ------------ FORM ------------ */
+
+
+/* ------------ TABLE ------------ */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    /*border-bottom: 1px solid;*/
+    margin-bottom: 5px;
+    font-size: 1.25rem;
+}
+
+table td,
+table th {
+    padding: 0 20px;
+}
+
+table th:nth-child(1),
+td:nth-child(1) {
+    display: none;
+}
+
+tr {
+    border-radius: 15px !important;
+    margin: 2px;
+}
+
+table tr:hover td:nth-child(2) {
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+}
+
+table tr:hover td:last-child {
+    opacity: 100;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+table tbody tr:hover td {
+    background-color: var(--color-primary);
+}
+
+table td a {
+    text-decoration: none;
+    color: var(--font-primary);
+    width: 100%;
+    display: inline-block;
+}
+
+/* ------------ TABLE ------------ */
+
+
+/* ------------ DETAILS ------------ */
+
+#title {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+a.button {
+    border: none;
+    border-radius: 50px;
+    padding: 10px;
+    transition: 0.25s;
+    cursor: pointer;
+    display: block;
+    color: var(--font-primary);
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+a.button:hover {
+    background-color: #ccc;
+}
+
+a.button .material-symbols-rounded {
+    position: relative;
+    left: 7px;
+    top: 0 !important;
+}
+
+/* ------------ DETAILS ------------ */
+
+/* ------------ TOOLS ------------ */
+
+.gap10 {
+    width: 10px;
+}
+
+/* ------------ TOOLS ------------ */
