@@ -10,21 +10,45 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ContactDAO {
+public class AgendaDAO {
+    /**
+     * Objeto de tomcat que contiene los datos necesarios para una conexión con la base de datos
+     */
     private final DataSource dataSource;
+
+    /**
+     * Conexión obtenida después de procesar el dataSource
+     */
     private Connection connection;
 
-    public ContactDAO() throws NamingException {
+    /**
+     * Constructor
+     * Inicializa el dataSource
+     *
+     * @throws NamingException Es lanzada si no encuentra la "configuración" deseada
+     */
+    public AgendaDAO() throws NamingException {
         // Coger la conexión del archivo context.xml
         Context initContext = new InitialContext();
         this.dataSource = (DataSource) initContext.lookup("java:comp/env/jdbc/agenda");
     }
 
+    /**
+     * Cierra la conexión con la base de datos
+     *
+     * @throws SQLException Es lanzada si se encuentra algún error al cerrar la base de datos
+     */
     public void disconnect() throws SQLException {
         if (connection != null && !connection.isClosed())
             connection.close();
     }
 
+    /**
+     * Recoge la conexión del dataSource para que se pueda usar y ejecutar queries
+     *
+     * @return true si se pudo conectar, false en caso contrario
+     * @throws SQLException Es lanzada si ocurre algún error al acceder a la base de datos o al intentar conectarse
+     */
     public boolean connect() throws SQLException {
         boolean res = false;
 
@@ -35,10 +59,20 @@ public class ContactDAO {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-        }
+        } else if (connection != null && !connection.isClosed())
+            res = true;
+
         return res;
     }
 
+    /**
+     * Devuelve una lista de contactos a partir de un ResultSet obtenido de una consulta anterior
+     *
+     * @param rs ResultSet de una consulta anteriór ya enviada y ejecutada
+     * @return Lista de contactos, puede estar vacía
+     * @throws SQLException Es lanzada si el ResultSet está cerrado o hay algún problema en la comunicación con
+     *                      la base de datos
+     */
     private List<Contact> getContacts(ResultSet rs) throws SQLException {
         List<Contact> contactList = new ArrayList<>();
 
@@ -61,6 +95,12 @@ public class ContactDAO {
         return contactList;
     }
 
+    /**
+     * Devuelve una lista con todos los contactos de la base de datos
+     *
+     * @return Lista de contactos, puede estar vacía
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     public List<Contact> getAllContacts() throws SQLException {
         List<Contact> contactList = new ArrayList<>();
 
@@ -78,25 +118,12 @@ public class ContactDAO {
         return contactList;
     }
 
-    private ContactDetails getContact(ResultSet rs, int ID) throws SQLException {
-        String name;
-        String birthday;
-        String creationDate;
-        boolean isFavorite;
-
-        ContactDetails contactDetails;
-
-        if (rs.next()) {
-            name = rs.getString("name");
-            birthday = rs.getString("birthday");
-            creationDate = rs.getString("creationDate");
-            isFavorite = rs.getBoolean("favorite");
-            contactDetails = new ContactDetails(ID, name, birthday, creationDate, isFavorite);
-        } else contactDetails = null;
-
-        return contactDetails;
-    }
-
+    /**
+     * Devuelve una lista con todos los contactos
+     *
+     * @return Lista de contactos
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     public List<Group> getAllGroups() throws SQLException {
         List<Group> groupList = new ArrayList<>();
 
@@ -125,6 +152,13 @@ public class ContactDAO {
         return groupList;
     }
 
+    /**
+     * Devuelve los miembros de un grupo
+     *
+     * @param ID Id del grupo
+     * @return Lista de contactos
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     public List<Contact> getGroupMembers(int ID) throws SQLException {
         List<Contact> contactList = new ArrayList<>();
 
@@ -143,8 +177,40 @@ public class ContactDAO {
         return contactList;
     }
 
+    /**
+     * Devuelve los miembros que NO están en un grupo
+     *
+     * @param ID Id del grupo
+     * @return Lista de contactos
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
+    public List<Contact> getGroupAvailableMembers(int ID) throws SQLException {
+        List<Contact> contactList = new ArrayList<>();
+
+        if (connect()) {
+            PreparedStatement stmt = connection.prepareStatement("EXEC dbo.getGroupAvailableMembers ?");
+            stmt.setInt(1, ID);
+            ResultSet rs = stmt.executeQuery();
+
+            contactList = getContacts(rs);
+
+            rs.close();
+            stmt.close();
+            disconnect();
+        } else System.out.println("Failed to connect!!");
+
+        return contactList;
+    }
+
+    /**
+     * Devuelve un grupo a partir de su ID
+     *
+     * @param ID Id del grupo
+     * @return Objeto de tipo Grupo con sus detalles
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     public Group getGroup(int ID) throws SQLException {
-        Group group = new Group();
+        Group group = null;
 
         int groupID;
         String name;
@@ -171,6 +237,84 @@ public class ContactDAO {
         return group;
     }
 
+    /**
+     * Agrega un nuevo grupo con miembros
+     *
+     * @param group      Grupo para añadir
+     * @param memberList Lista de ID de miembros separadas por comas
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
+    public void insertGroup(Group group, String memberList) throws SQLException {
+        if (connect()) {
+            String query = "exec dbo.addGroup ?, ?, ?;";
+            PreparedStatement stmt = connection.prepareStatement(query);
+
+            stmt.setString(1, group.getName());
+            stmt.setString(2, group.getDescription());
+            stmt.setString(3, memberList);
+
+            stmt.execute();
+
+            stmt.close();
+            disconnect();
+        } else System.out.println("Failed to connect!!");
+    }
+
+    /**
+     * Añade miembros nuevos a un grupo
+     *
+     * @param groupID    Id del grupo
+     * @param memberList Lista de IDs de miembros, separadas por coma
+     */
+    public void insertGroupMembers(int groupID, String memberList) throws SQLException {
+        if (connect()) {
+            String query = "exec dbo.addGroupMembers  ?, ?;";
+            PreparedStatement stmt = connection.prepareStatement(query);
+
+            stmt.setInt(1, groupID);
+            stmt.setString(2, memberList);
+
+            stmt.execute();
+        } else System.out.println("Failed to connect!!");
+    }
+
+    /**
+     * Devuelve los detalles básicos de un contacto en específico.
+     * Se usa en conjunto con otras funciones para obtener todos los detalles
+     *
+     * @param rs ResultSet de una consulta anteriór ya enviada y ejecutada
+     * @param ID Id del contacto
+     * @return Devuelve un objeto ContactDetails sin Emails, Phones o Addresses
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
+    private ContactDetails getContact(ResultSet rs, int ID) throws SQLException {
+        String name;
+        String birthday;
+        String creationDate;
+        boolean isFavorite;
+        String tags;
+
+        ContactDetails contactDetails;
+
+        if (rs.next()) {
+            name = rs.getString("name");
+            birthday = rs.getString("birthday");
+            creationDate = rs.getString("creationDate");
+            isFavorite = rs.getBoolean("favorite");
+            tags = rs.getString("tags");
+            contactDetails = new ContactDetails(ID, name, birthday, creationDate, isFavorite, tags);
+        } else contactDetails = null;
+
+        return contactDetails;
+    }
+
+    /**
+     * Devuelve la lista de teléfonos de un contacto
+     *
+     * @param rs             ResultSet de una consulta anteriór ya enviada y ejecutada
+     * @param contactDetails Objeto al que añadir la lista de teléfonos
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     private void getPhones(ResultSet rs, ContactDetails contactDetails) throws SQLException {
         int id;
         String countryCode;
@@ -187,6 +331,13 @@ public class ContactDAO {
         }
     }
 
+    /**
+     * Devuelve la lista de emails de un contacto
+     *
+     * @param rs             ResultSet de una consulta anteriór ya enviada y ejecutada
+     * @param contactDetails Objeto al que añadir la lista de emails
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     private void getEmails(ResultSet rs, ContactDetails contactDetails) throws SQLException {
         int id;
         String email;
@@ -201,6 +352,13 @@ public class ContactDAO {
         }
     }
 
+    /**
+     * Devuelve la lista de direcciones de un contacto
+     *
+     * @param rs             ResultSet de una consulta anteriór ya enviada y ejecutada
+     * @param contactDetails Objeto al que añadir la lista de direcciones
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     private void getAddresses(ResultSet rs, ContactDetails contactDetails) throws SQLException {
         int id;
         String street;
@@ -221,6 +379,13 @@ public class ContactDAO {
         }
     }
 
+    /**
+     * Une todas las funciones anteriores para devolver todos los detalles completos de un contacto
+     *
+     * @param ID Id del contacto
+     * @return Devuelve todos los detalles de un contacto
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     public ContactDetails getContact(int ID) throws SQLException {
         ContactDetails contactDetails = new ContactDetails();
 
@@ -264,6 +429,12 @@ public class ContactDAO {
         return contactDetails;
     }
 
+    /**
+     * Devuelve una lista de Tags disponibles en la base de datos
+     *
+     * @return Lista de Tags
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     public List<Tag> getAllTags() throws SQLException {
         List<Tag> tagList = new ArrayList<>();
 
@@ -289,6 +460,35 @@ public class ContactDAO {
         return tagList;
     }
 
+    /**
+     * Elimina un contacto o un grupo a partir de un Statement predefinido
+     *
+     * @param stmt Statement predefinido
+     * @return true si se pudo eliminar el objeto, false en caso contrario
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
+    private boolean delete(PreparedStatement stmt) throws SQLException {
+        boolean res = false;
+        ResultSet rs = stmt.executeQuery();
+        String dbResponse;
+
+        if (rs.next()) {
+            dbResponse = rs.getString(1);
+            if (dbResponse != null && dbResponse.equals("ok"))
+                res = true;
+        }
+
+        rs.close();
+        return res;
+    }
+
+    /**
+     * Elimina un contacto
+     *
+     * @param ID Id del contacto
+     * @return true si se pudo eliminar, false en caso contrario
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     public boolean deleteContact(int ID) throws SQLException {
         boolean res = false;
 
@@ -296,16 +496,8 @@ public class ContactDAO {
             PreparedStatement stmt = connection.prepareStatement("exec dbo.removeContact ?;");
             stmt.setInt(1, ID);
 
-            ResultSet rs = stmt.executeQuery();
-            String dbResponse;
+            res = delete(stmt);
 
-            if (rs.next()) {
-                dbResponse = rs.getString(1);
-
-                if (dbResponse.equals("ok")) res = true;
-            }
-
-            rs.close();
             stmt.close();
             disconnect();
         } else System.out.println("Failed to connect!!");
@@ -313,6 +505,36 @@ public class ContactDAO {
         return res;
     }
 
+    /**
+     * Elimina un grupo
+     *
+     * @param ID Id del grupo
+     * @return true si se pudo eliminar, false en caso contrario
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
+    public boolean deleteGroup(int ID) throws SQLException {
+        boolean res = false;
+
+        if (connect()) {
+            PreparedStatement stmt = connection.prepareStatement("exec dbo.removeGroup ?;");
+            stmt.setInt(1, ID);
+
+            res = delete(stmt);
+
+            stmt.close();
+            disconnect();
+        } else System.out.println("Failed to connect!!");
+
+        return res;
+    }
+
+    /**
+     * Inserta Emails a un contacto específico
+     *
+     * @param emails Lista de emails
+     * @param id     Id del contacto
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     private void insertEmails(List<Email> emails, int id) throws SQLException {
         String query;
         PreparedStatement stmt;
@@ -330,6 +552,13 @@ public class ContactDAO {
         stmt.close();
     }
 
+    /**
+     * Inserta Phones a un contacto específico
+     *
+     * @param phones Lista de teléfonos
+     * @param id     Id del contacto
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     private void insertPhones(List<Phone> phones, int id) throws SQLException {
         PreparedStatement stmt;
         String query;
@@ -348,6 +577,13 @@ public class ContactDAO {
         stmt.close();
     }
 
+    /**
+     * Inserta Addresses a un contacto específico
+     *
+     * @param addresses Lista de direcciones
+     * @param id        Id del contacto
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     private void insertAddresses(List<Address> addresses, int id) throws SQLException {
         String query;
         PreparedStatement stmt;
@@ -368,6 +604,13 @@ public class ContactDAO {
         stmt.close();
     }
 
+    /**
+     * Inserta un contacto en la base de datos, con todos sus detalles
+     *
+     * @param contactDetails Detalles del contacto a insertar
+     * @return true si se pudo insertar, false en caso contrario
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     public boolean insertContact(ContactDetails contactDetails) throws SQLException {
         boolean res = false;
 
@@ -422,6 +665,13 @@ public class ContactDAO {
         return res;
     }
 
+    /**
+     * Actualizar un contacto existente en la base de datos
+     *
+     * @param contactDetails Detalles nuevos para el contacto
+     * @return true si se pudo actualizar, false en caso contrario
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
     public boolean updateContact(ContactDetails contactDetails) throws SQLException {
         boolean res = false;
 
@@ -431,5 +681,17 @@ public class ContactDAO {
         } else System.out.println("Failed to connect!!");
 
         return res;
+    }
+
+    public void removeGroupMember(Integer groupID, Integer memberID) throws SQLException {
+        if (connect()) {
+            String query = "exec dbo.removeGroupMember ?, ?;";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setInt(1, groupID);
+            stmt.setInt(2, memberID);
+            stmt.execute();
+            stmt.close();
+            disconnect();
+        }
     }
 }

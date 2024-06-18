@@ -3,5 +3,9 @@ table td {
         Como no tiene iconos, el td es mas finito
         so I added made it more consistent
     */
-    padding: 6px 20px;
+    padding: 8px 20px;
+}
+
+form {
+    width: unset;
 }

@@ -21,15 +21,6 @@ select {
 #fields input {
     margin: 10px 0;
     width: 100%;
-    border-radius: 5px;
-    border: 1px solid black;
-    padding: 0.3rem .3rem;
-    caret-color: var(--color-secondary);
-}
-
-#fields input:focus {
-    border: 3px solid var(--color-secondary);
-    outline: none;
 }
 
 button.remove-field {

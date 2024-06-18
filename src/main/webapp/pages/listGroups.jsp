@@ -1,7 +1,10 @@
 <%@ page import="java.util.List" %>
 <%@ page import="com.daniela.classes.Group" %>
+<%@ page import="com.daniela.classes.Contact" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page pageEncoding="UTF-8" %>
+
+<% String baseUrl = request.getContextPath(); %>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -10,9 +13,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet"
               href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"/>
-        <link rel="stylesheet" href="static/css/theme.css">
-        <link rel="stylesheet" href="static/css/listGroups.css">
-        <script src="static/js/listContacts.js"></script>
+        <link rel="stylesheet" href="<%= baseUrl %>/static/css/theme.css">
+        <link rel="stylesheet" href="<%= baseUrl %>/static/css/listGroups.css">
+        <script src="<%= baseUrl %>/static/js/dialog.js"></script>
         <title>Grupos</title>
     </head>
     <body>
@@ -20,12 +23,22 @@
 
         <div id="body">
             <div id="wrapper">
-                <h1>Grupos</h1>
+                <div id="title">
+                    <h1>Grupos</h1>
+
+                    <a class="button" onclick="openDialog()">
+                        <span class="material-symbols-rounded" style="left: unset !important; scale: 1.25;"> add_circle </span>
+                    </a>
+                </div>
                 <%
+                    @SuppressWarnings({"unchecked", "rawtypes"})
                     List<Group> groups = (List) request.getAttribute("groupList");
+
+                    @SuppressWarnings({"unchecked", "rawtypes"})
+                    List<Contact> contacts = (List) request.getAttribute("contactList");
+
                     if (groups == null || groups.isEmpty()) {
                         out.println("<h1>No tienes grupos!<h1>");
-                        out.println("<h3>Puedes añadir uno <a href='#'>aquí</a>.</h3>");
                     } else {
                 %>
                 <table>
@@ -48,6 +61,33 @@
                 <%
                     }
                 %>
+
+                <dialog id="dialog">
+                    <h2>Create New Group</h2>
+                    <form action="addGroup" method="post">
+                        <div class="form-group">
+                            <label for="name">Nombre: </label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Descripción: </label>
+                            <input type="text" id="description" name="description" required></input>
+                        </div>
+                        <div class="form-group">
+                            <label for="members">Miembros: </label>
+                            <select id="members" name="members" multiple style="min-width: 50%;">
+                                <%
+                                    for (Contact contact : contacts)
+                                        out.println(String.format("<option value='%d'>%s</option>", contact.getID(), contact.getName()));
+                                %>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit">Crear grupo</button>
+                            <button type="button" class="cancel-btn" onclick="closeDialog()">Cancelar</button>
+                        </div>
+                    </form>
+                </dialog>
             </div>
         </div>
     </body>

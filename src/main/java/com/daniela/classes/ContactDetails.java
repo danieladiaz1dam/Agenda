@@ -19,12 +19,13 @@ public class ContactDetails {
         this.ID = 0;
     }
 
-    public ContactDetails(int ID, String name, String birthday, String creationDate, boolean isFavorite) {
+    public ContactDetails(int ID, String name, String birthday, String creationDate, boolean isFavorite, String tags) {
         this.ID = ID;
         this.name = name;
         this.birthday = birthday;
         this.creationDate = creationDate;
         this.isFavorite = isFavorite;
+        this.tags = tags;
     }
 
     public ContactDetails(String name, String birthday, boolean isFavorite, String tags, ArrayList<Email> emails, ArrayList<Phone> phones, ArrayList<Address> addresses) {
@@ -124,13 +125,18 @@ public class ContactDetails {
 
     @Override
     public String toString() {
+        String[] tagList = {""};
+
+        if (this.tags != null && !this.tags.isEmpty())
+            tagList = tags.split(",");
+
         return "ContactDetails{" +
                 "ID=" + ID +
                 ", name='" + name + '\'' +
                 ", birthday=" + birthday +
                 ", creationDate=" + creationDate +
                 ", isFavorite=" + isFavorite +
-                ", tags=" + Arrays.toString(tags.split(",")) +
+                ", tags=" + Arrays.toString(tagList) +
                 ", phones=" + phones +
                 ", addresses=" + addresses +
                 ", emails=" + emails +

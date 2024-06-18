@@ -3,3 +3,18 @@
     color: var(--font-secondary);
 }
 
+a.button .material-symbols-rounded {
+    left: 0;
+
+}
+
+form {
+    width: unset;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.form-group {
+    justify-content: center;
+}

@@ -1,15 +1,11 @@
 package com.daniela.classes;
 
 public class Contact {
-    private final String BUTTONS = "<td>\n" +
-            "                            <button type=\"button\" onclick=\"edit(%d)\"><span class=\"material-symbols-rounded\"> edit </span></button>\n" +
-            "                            <button type=\"button\" onclick=\"remove(%d)\"><span class=\"material-symbols-rounded\"> delete </span></button>\n" +
-            "                        </td>";
     private final int ID;
     private String name = "";
     private String phone = "";
     private String email = "";
-    private boolean favorite = false;
+    private final boolean IS_FAVORITE;
 
     public Contact(int ID, String name, String phone, String email, boolean favorite) {
         this.ID = ID;
@@ -19,7 +15,7 @@ public class Contact {
             this.phone = phone;
         if (email != null)
             this.email = email;
-        this.favorite = favorite;
+        this.IS_FAVORITE = favorite;
     }
 
     public int getID() {
@@ -39,7 +35,7 @@ public class Contact {
     }
 
     public boolean isFavorite() {
-        return favorite;
+        return IS_FAVORITE;
     }
 
     public String toTableRowAsContact() {
@@ -57,7 +53,7 @@ public class Contact {
                             <td>%s</td>
                             <td>
                                 <button type="button" onclick="edit(%d)"><span class="material-symbols-rounded"> edit </span></button>
-                                <button type="button" onclick="remove(%d)"><span class="material-symbols-rounded"> delete </span></button>
+                                <button type="button" onclick="removeContact(%d)"><span class="material-symbols-rounded"> delete </span></button>
                            </td>
                         </tr>
                         """,
@@ -67,7 +63,7 @@ public class Contact {
         );
     }
 
-    public String toTableRowAsMember() {
+    public String toTableRowAsMember(int groupID) {
         String phoneNumber = "";
 
         if (this.phone.length() > 3)
@@ -80,8 +76,11 @@ public class Contact {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>
+                            <button type="button" onclick="removeGroupMember(%d, %d)"><span class="material-symbols-rounded"> delete </span></button>
+                       </td>
                     </tr>
-                    """, this.ID, this.name, this.email, phoneNumber
+                    """, this.ID, this.name, this.email, phoneNumber, groupID, this.ID
         );
     }
 

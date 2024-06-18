@@ -4,9 +4,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page pageEncoding="UTF-8" %>
 
-<%!
+<%
     final int YEAR = Year.now().getValue();
     final String[] MESES = {"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+
+    String baseUrl = request.getContextPath();
 %>
 
 <!DOCTYPE html>
@@ -16,9 +18,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet"
               href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"/>
-        <link rel="stylesheet" href="static/css/theme.css">
-        <link rel="stylesheet" href="static/css/newContact.css">
-        <script src="static/js/newContact.js"></script>
+        <link rel="stylesheet" href="<%= baseUrl %>/static/css/theme.css">
+        <link rel="stylesheet" href="<%= baseUrl %>/static/css/newContact.css">
+        <script src="<%= baseUrl %>/static/js/newContact.js"></script>
         <title>Nuevo Contacto</title>
     </head>
     <body>

@@ -10,6 +10,12 @@ public class Group {
         this.id = -1;
     }
 
+    public Group(String name, String description) {
+        this.id = -1;
+        this.name = name;
+        this.description = description;
+    }
+
     public Group(int id, String name, String description) {
         this.id = id;
         this.name = name;
