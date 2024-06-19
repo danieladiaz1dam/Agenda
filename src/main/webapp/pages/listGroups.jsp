@@ -4,7 +4,14 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page pageEncoding="UTF-8" %>
 
-<% String baseUrl = request.getContextPath(); %>
+<%
+    String baseUrl = request.getContextPath();
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    List<Group> groups = (List) request.getAttribute("groupList");
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    List<Contact> contacts = (List) request.getAttribute("contactList");
+%>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -26,19 +33,14 @@
                 <div id="title">
                     <h1>Grupos</h1>
 
-                    <a class="button" onclick="openDialog()">
-                        <span class="material-symbols-rounded" style="left: unset !important; scale: 1.25;"> add_circle </span>
+                    <a id="addGroupDialogBtn" class="button" onclick="openDialog()">
+                        <span class="material-symbols-rounded"
+                              style="left: unset !important; scale: 1.25;"> add_circle </span>
                     </a>
                 </div>
                 <%
-                    @SuppressWarnings({"unchecked", "rawtypes"})
-                    List<Group> groups = (List) request.getAttribute("groupList");
-
-                    @SuppressWarnings({"unchecked", "rawtypes"})
-                    List<Contact> contacts = (List) request.getAttribute("contactList");
-
                     if (groups == null || groups.isEmpty()) {
-                        out.println("<h1>No tienes grupos!<h1>");
+                        out.println("<h2>No tienes grupos!<h2>");
                     } else {
                 %>
                 <table>
@@ -71,7 +73,7 @@
                         </div>
                         <div class="form-group">
                             <label for="description">Descripción: </label>
-                            <input type="text" id="description" name="description" required></input>
+                            <input type="text" id="description" name="description" required>
                         </div>
                         <div class="form-group">
                             <label for="members">Miembros: </label>
@@ -83,7 +85,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <button type="submit">Crear grupo</button>
+                            <button id="createGroupBtn" type="submit">Crear grupo</button>
                             <button type="button" class="cancel-btn" onclick="closeDialog()">Cancelar</button>
                         </div>
                     </form>

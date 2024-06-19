@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import javax.naming.NamingException;
 import java.io.*;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.ArrayList;
@@ -17,23 +18,29 @@ import java.util.ArrayList;
 public class SvController extends HttpServlet {
     /**
      * Objeto DAO encargado de las operaciones con la base de datos
+     *
+     * @see AgendaDAO
      */
     private AgendaDAO agendaDAO;
 
     /**
      * Dispatcher, utilizado para hacer redirections y pasar datos a la nueva página
+     *
+     * @see RequestDispatcher
      */
     private RequestDispatcher dispatcher;
 
     /**
      * Se usa para escribir en la response usando un println(), pero no tiene format de forma nativa :/
+     *
+     * @see PrintWriter
      */
     private PrintWriter out;
 
     /**
      * Inicializa el servlet, inicializando consigo el objeto encargado de la manipulación de la base de datos
      *
-     * @throws ServletException Es lanzada si se no se encuentra la configuración de la base de datos
+     * @throws ServletException Es lanzada si no se encuentra la configuración de la base de datos
      */
     @Override
     public void init() throws ServletException {
@@ -51,6 +58,8 @@ public class SvController extends HttpServlet {
      * @param resp an {@link HttpServletResponse} object that contains the response the servlet sends to the client
      * @throws ServletException Es lanzada por alguna función
      * @throws IOException      Es lanzada por alguna función
+     * @see HttpServletRequest
+     * @see HttpServletResponse
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -64,13 +73,10 @@ public class SvController extends HttpServlet {
                 addContact(req, resp);
                 break;
             case "/updateContact":
-                out.println("Update Contact Details");
+                updateContact(req, resp);
                 break;
             case "/addGroup":
                 addGroup(req, resp);
-                break;
-            case "/updateGroup":
-                out.println("Update Group");
                 break;
             case "/addGroupMembers":
                 addGroupMembers(req, resp);
@@ -91,6 +97,8 @@ public class SvController extends HttpServlet {
      * @param resp an {@link HttpServletResponse} object that contains the response the servlet sends to the client
      * @throws ServletException Es lanzada por alguna función
      * @throws IOException      Es lanzada por alguna función
+     * @see HttpServletRequest
+     * @see HttpServletResponse
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -100,39 +108,154 @@ public class SvController extends HttpServlet {
         resp.setContentType("text/html");
         out = resp.getWriter();
 
-        try {
-            switch (action) {
-                case "/contacts":
-                    listContacts(req, resp, args);
-                    break;
-                case "/editContact":
-                    out.println("<h1>Edit Contact Details</h1>");
-                    out.println(String.format("contactID: %s", req.getParameter("id")));
-                    break;
-                case "/groups":
-                    listGroups(req, resp, args);
-                    break;
-                case "/newContact":
-                    newContact(req, resp);
-                    break;
-                case "/jaimito":
-                    out.println("te como el pito");
-                    break;
-                default:
-                    out.printf("<h1>%s</h1>", action);
-                    if (args) {
-                        Enumeration<String> params = req.getParameterNames();
-                        while (params.hasMoreElements()) {
-                            String paramName = params.nextElement();
-                            out.println(paramName + " = " + req.getParameter(paramName) + "<br>");
-                        }
+        switch (action) {
+            case "/":
+                resp.sendRedirect(req.getContextPath() + "/contacts");
+                break;
+            case "/contacts":
+                listContacts(req, resp, args);
+                break;
+            case "/editContact":
+                editContact(req, resp);
+                break;
+            case "/groups":
+                listGroups(req, resp, args);
+                break;
+            case "/newContact":
+                newContact(req, resp);
+                break;
+            case "/about":
+                dispatcher = req.getRequestDispatcher("pages/about.jsp");
+                dispatcher.forward(req, resp);
+                break;
+            default:
+                out.printf("<h1>%s</h1>", action);
+                if (args) {
+                    Enumeration<String> params = req.getParameterNames();
+                    while (params.hasMoreElements()) {
+                        String paramName = params.nextElement();
+                        out.println(paramName + " = " + req.getParameter(paramName) + "<br>");
                     }
-            }
-        } catch (SQLException e) {
-            throw new ServletException(e);
+                }
         }
     }
 
+    private void updateContact(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        //out.println("<pre>");
+
+        // --- Obtener todos los datos del formulario ---
+        int ID = Util.parseInt(req.getParameter("contactID"));
+
+        boolean isFavorite = req.getParameter("favorite") != null;
+        // out.println("isFavorite = " + isFavorite);
+
+        String name = req.getParameter("name");
+        //out.println("name = " + name);
+
+        String tagList = req.getParameter("tagList");
+        //out.println("tagList = " + tagList);
+
+        Integer day = Util.parseInt(req.getParameter("day"));
+        Integer month = Util.parseInt(req.getParameter("month"));
+        Integer year = Util.parseInt(req.getParameter("year"));
+        String date;
+
+        if (day == null || month == null || year == null)
+            date = null;
+        else
+            date = String.format("%4d-%02d-%02d", year, month, day);
+
+        /*out.println("date = " + date);*/
+
+        String deletedEmails = Util.removeLastChar(req.getParameter("deletedEmails"));
+        String deletedPhones = Util.removeLastChar(req.getParameter("deletedPhones"));
+        String deletedAddresses = Util.removeLastChar(req.getParameter("deletedAddresses"));
+
+     /*   out.println("deletedEmails = " + deletedEmails);
+        out.println("deletedPhones = " + deletedPhones);
+        out.println("deletedAddress = " + deletedAddresses);*/
+
+        String[] emailIDs = req.getParameterValues("emailIDs");
+        String[] emails = req.getParameterValues("emails");
+        String[] emailCategories = req.getParameterValues("emailCategories");
+        ArrayList<Email> emailList = Util.emailsFromArrays(emailIDs, emails, emailCategories);
+
+        String[] phoneIDs = req.getParameterValues("phoneIDs");
+        String[] countryCodes = req.getParameterValues("countryCodes");
+        String[] phones = req.getParameterValues("phones");
+        String[] phonesCategories = req.getParameterValues("phoneCategories");
+        ArrayList<Phone> phoneList = Util.phonesFromArrays(phoneIDs, countryCodes, phones, phonesCategories);
+
+        String[] addressIDs = req.getParameterValues("addressIDs");
+        String[] streets = req.getParameterValues("streets");
+        String[] houseNumbers = req.getParameterValues("houseNumbers");
+        String[] cities = req.getParameterValues("cities");
+        String[] zipCodes = req.getParameterValues("zipCodes");
+        String[] addressCategories = req.getParameterValues("addressCategories");
+        ArrayList<Address> addressList = Util.addressesFromArrays(addressIDs, streets, houseNumbers, cities, zipCodes, addressCategories);
+
+        /*out.println("New emailList = " + emailList);
+        out.println("New phoneList = " + phoneList);
+        out.println("New addressList = " + addressList);
+
+        out.println("</pre>");*/
+
+        // Crear objeto con esos datos
+        ContactDetails newContact = new ContactDetails(ID, name, date, isFavorite, tagList, emailList, phoneList, addressList);
+
+        try {
+            agendaDAO.updateContact(newContact, deletedEmails, deletedPhones, deletedAddresses);
+        } catch (SQLException e) {
+            throw new ServletException(e);
+        }
+
+        resp.sendRedirect(req.getContextPath() + "/contacts?id=" + newContact.getID());
+    }
+
+    /**
+     * Recoge los datos necesarios y redirecciona a la página para editar un contacto
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws ServletException Lanzada por el servlet cuando algo falla
+     * @throws IOException      Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
+    private void editContact(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (req.getParameter("id") != null) {
+            ContactDetails contactDetails;
+            List<Tag> availableTags;
+
+            try {
+                contactDetails = agendaDAO.getContact(Integer.parseInt(req.getParameter("id")));
+                availableTags = agendaDAO.getAvailableTags(contactDetails.getID());
+            } catch (SQLException e) {
+                throw new ServletException(e);
+            }
+
+            if (availableTags != null) {
+                req.setAttribute("contactDetails", contactDetails);
+                req.setAttribute("availableTags", availableTags);
+                dispatcher = req.getRequestDispatcher("pages/editContact.jsp");
+                dispatcher.forward(req, resp);
+            } else
+                resp.sendRedirect(req.getContextPath() + "/contacts");
+        } else
+            resp.sendRedirect(req.getContextPath() + "/contacts");
+    }
+
+    /**
+     * Recoge los datos necesarios para añadir contacto(s) a un grupo en la base de datos
+     * Luego recarga la página
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws ServletException Lanzada por el servlet cuando algo falla
+     * @throws IOException      Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
     private void addGroupMembers(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         int groupID = Util.parseInt(req.getParameter("groupId"));
         String[] membersArray = req.getParameterValues("members");
@@ -147,6 +270,17 @@ public class SvController extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/groups?id=" + groupID);
     }
 
+    /**
+     * Recoge los datos necesarios para crear un grupo nuevo en la base de datos
+     * Luego recarga la página
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws ServletException Lanzada por el servlet cuando algo falla
+     * @throws IOException      Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
     private void addGroup(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String name = req.getParameter("name");
         String description = req.getParameter("description");
@@ -162,16 +296,24 @@ public class SvController extends HttpServlet {
         }
     }
 
+    /**
+     * Recoge los datos necesarios para crear un contacto en la base de datos.
+     * También añade sus emails, teléfonos y direcciones
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws ServletException Lanzada por el servlet cuando algo falla
+     * @throws IOException      Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
     private void addContact(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // --- Obtener todos los datos del formulario ---
         boolean isFavorite = req.getParameter("favorite") != null;
-        System.out.println("isFavorite = " + isFavorite);
 
         String name = req.getParameter("name");
-        System.out.println("name = " + name);
 
         String tagList = req.getParameter("tagList");
-        System.out.println("tagList = " + tagList);
 
         Integer day = Util.parseInt(req.getParameter("day"));
         Integer month = Util.parseInt(req.getParameter("month"));
@@ -182,26 +324,22 @@ public class SvController extends HttpServlet {
             date = null;
         else
             date = String.format("%4d-%02d-%02d", year, month, day);
-        System.out.println("date = " + date);
 
         String[] emails = req.getParameterValues("emails");
         String[] emailCategories = req.getParameterValues("emailCategories");
         ArrayList<Email> emailList = Util.emailsFromArrays(emails, emailCategories);
-        System.out.println("emailList = " + emailList);
 
         String[] countryCodes = req.getParameterValues("countryCodes");
         String[] phones = req.getParameterValues("phones");
         String[] phonesCategories = req.getParameterValues("phoneCategories");
         ArrayList<Phone> phoneList = Util.phonesFromArrays(countryCodes, phones, phonesCategories);
-        System.out.println("phoneList = " + phoneList);
 
         String[] streets = req.getParameterValues("streets");
         String[] houseNumbers = req.getParameterValues("houseNumbers");
         String[] cities = req.getParameterValues("cities");
         String[] zipCodes = req.getParameterValues("zipCodes");
         String[] addressCategories = req.getParameterValues("addressCategories");
-        ArrayList<Address> addressList = Util.addressesFromArrays(streets, houseNumbers, cities, zipCodes, addressCategories);
-        System.out.println("addressList = " + addressList);
+        ArrayList<Address> addressList = Util.addressesFromArrays(streets, houseNumbers, zipCodes, cities, addressCategories);
         // --- Obtener todos los datos del formulario ---
 
         // Crear objeto con esos datos
@@ -217,6 +355,7 @@ public class SvController extends HttpServlet {
                 req.setAttribute("name", newContact.getName());
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             req.setAttribute("status", false);
             req.setAttribute("name", newContact.getName());
             req.setAttribute("error", e.getMessage());
@@ -226,50 +365,117 @@ public class SvController extends HttpServlet {
         dispatcher.forward(req, resp);
     }
 
-    private void newContact(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SQLException {
-        List<Tag> tagList = agendaDAO.getAllTags();
-        req.setAttribute("tagList", tagList);
-        dispatcher = req.getRequestDispatcher("pages/newContact.jsp");
-        dispatcher.forward(req, resp);
-    }
-
-    private void listGroups(HttpServletRequest req, HttpServletResponse resp, boolean details) throws ServletException, IOException, SQLException {
-        if (details && req.getParameter("id") != null) {
-            getGroupDetails(req, resp);
-        } else {
-            List<Group> groupList = agendaDAO.getAllGroups();
-            List<Contact> contactList = agendaDAO.getAllContacts();
-
-            req.setAttribute("groupList", groupList);
-            req.setAttribute("contactList", contactList);
-
-            dispatcher = req.getRequestDispatcher("pages/listGroups.jsp");
+    /**
+     * Recoge los datos necesarios de la base de datos para mostrar la página para añadir un nuevo contacto
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws ServletException Lanzada por el servlet cuando algo falla
+     * @throws IOException      Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
+    private void newContact(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        try {
+            List<Tag> tagList = agendaDAO.getAllTags();
+            req.setAttribute("tagList", tagList);
+            dispatcher = req.getRequestDispatcher("pages/newContact.jsp");
             dispatcher.forward(req, resp);
+        } catch (SQLException e) {
+            throw new ServletException(e);
         }
     }
 
-    private void getGroupDetails(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SQLException {
+    /**
+     * Recoge los datos necesarios de la base de datos y redirecciona a la página para ver los detalles y miembros de un grupo
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws ServletException Lanzada por el servlet cuando algo falla
+     * @throws IOException      Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
+    private void getGroupDetails(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if (req.getParameter("id") != null) {
-            Group group = agendaDAO.getGroup(Integer.parseInt(req.getParameter("id")));
+            Group group;
+
+            try {
+                group = agendaDAO.getGroup(Integer.parseInt(req.getParameter("id")));
+            } catch (SQLException e) {
+                throw new ServletException(e);
+            }
+
             if (group != null) {
-                List<Contact> memberList = agendaDAO.getGroupMembers(Integer.parseInt(req.getParameter("id")));
-                List<Contact> availableMembersList = agendaDAO.getGroupAvailableMembers(Integer.parseInt(req.getParameter("id")));
+                try {
+                    List<Contact> memberList = agendaDAO.getGroupMembers(Integer.parseInt(req.getParameter("id")));
+                    List<Contact> availableMembersList = agendaDAO.getGroupAvailableMembers(Integer.parseInt(req.getParameter("id")));
 
-                req.setAttribute("memberList", memberList);
-                req.setAttribute("availableMembersList", availableMembersList);
-                req.setAttribute("group", group);
+                    req.setAttribute("memberList", memberList);
+                    req.setAttribute("availableMembersList", availableMembersList);
+                    req.setAttribute("group", group);
 
-                dispatcher = req.getRequestDispatcher("pages/groupDetails.jsp");
-                dispatcher.forward(req, resp);
+                    dispatcher = req.getRequestDispatcher("pages/groupDetails.jsp");
+                    dispatcher.forward(req, resp);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+
             } else
                 resp.sendRedirect(req.getContextPath() + "/groups");
         } else
             resp.sendRedirect(req.getContextPath() + "/groups");
     }
 
-    private void getContactsDetails(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SQLException {
+    /**
+     * Si se piden detalles, llama a getGroupDetails. De lo contrario, Recoge los datos necesarios de la base de datos
+     * para la página de los grupos
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws ServletException Lanzada por el servlet cuando algo falla
+     * @throws IOException      Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
+    private void listGroups(HttpServletRequest req, HttpServletResponse resp, boolean details) throws ServletException, IOException {
+        if (details && req.getParameter("id") != null) {
+            getGroupDetails(req, resp);
+        } else {
+            try {
+                List<Group> groupList = agendaDAO.getAllGroups();
+                List<Contact> contactList = agendaDAO.getAllContacts();
+
+                req.setAttribute("groupList", groupList);
+                req.setAttribute("contactList", contactList);
+
+                dispatcher = req.getRequestDispatcher("pages/listGroups.jsp");
+                dispatcher.forward(req, resp);
+            } catch (SQLException e) {
+                throw new ServletException(e);
+            }
+        }
+    }
+
+    /**
+     * Recoge los datos necesarios de la base de datos y redirecciona a la página de los datos de un contacto.
+     * Si no se encontró el contacto, redirecciona a la página de listar contactos
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws ServletException Lanzada por el servlet cuando algo falla
+     * @throws IOException      Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
+    private void getContactsDetails(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if (req.getParameter("id") != null) {
-            ContactDetails contactDetails = agendaDAO.getContact(Integer.parseInt(req.getParameter("id")));
+            ContactDetails contactDetails;
+            try {
+                contactDetails = agendaDAO.getContact(Integer.parseInt(req.getParameter("id")));
+            } catch (SQLException e) {
+                throw new ServletException(e);
+            }
             if (contactDetails != null) {
                 req.setAttribute("contactDetails", contactDetails);
                 dispatcher = req.getRequestDispatcher("pages/contactDetails.jsp");
@@ -280,11 +486,27 @@ public class SvController extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/contacts");
     }
 
-    private void listContacts(HttpServletRequest req, HttpServletResponse resp, boolean details) throws SQLException, IOException, ServletException {
+    /**
+     * Si se piden detalles, llama a getContactsDetails. De lo contrario, Recoge los datos necesarios de la base de datos
+     * para la página de los contactos
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws ServletException Lanzada por el servlet cuando algo falla
+     * @throws IOException      Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
+    private void listContacts(HttpServletRequest req, HttpServletResponse resp, boolean details) throws ServletException, IOException {
         if (details)
             getContactsDetails(req, resp);
         else {
-            List<Contact> contactList = agendaDAO.getAllContacts();
+            List<Contact> contactList;
+            try {
+                contactList = agendaDAO.getAllContacts();
+            } catch (SQLException e) {
+                throw new ServletException(e);
+            }
             req.setAttribute("contactList", contactList);
 
             dispatcher = req.getRequestDispatcher("pages/listContacts.jsp");
@@ -297,7 +519,7 @@ public class SvController extends HttpServlet {
      *
      * @param req  the {@link HttpServletRequest} object that contains the request the client made of the servlet
      * @param resp the {@link HttpServletResponse} object that contains the response the servlet returns to the client
-     * @throws IOException      Es lanzada por alguna función
+     * @throws IOException Es lanzada por alguna función
      */
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -320,6 +542,16 @@ public class SvController extends HttpServlet {
         }
     }
 
+    /**
+     * Maneja una petición delete, recogiendo sus datos, comunicándose con la base de datos y devolviendo una respuesta
+     * de si se pudo eliminar el contacto, si hubo algún error o si no se encontró
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws IOException Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
     private void deleteContact(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         out = resp.getWriter();
         int id = Util.parseInt(req.getParameter("id"));
@@ -337,6 +569,16 @@ public class SvController extends HttpServlet {
         }
     }
 
+    /**
+     * Maneja una petición delete, recogiendo sus datos, comunicándose con la base de datos y devolviendo una respuesta
+     * de si se pudo eliminar el grupo, si hubo algún error o si no se encontró
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws IOException Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
     private void deleteGroup(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         out = resp.getWriter();
         int id = Util.parseInt(req.getParameter("id"));
@@ -354,22 +596,27 @@ public class SvController extends HttpServlet {
         }
     }
 
+    /**
+     * Maneja una petición delete, recogiendo sus datos, comunicándose con la base de datos y devolviendo una respuesta
+     * de si se pudo eliminar el contacto del grupo, si hubo algún error o si no se encontró
+     *
+     * @param req  Request Object
+     * @param resp Response Object
+     * @throws IOException Lanzada si no se encuentra el archivo jsp
+     * @see HttpServletRequest
+     * @see HttpServletResponse
+     */
     private void removeGroupMember(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Integer groupID = Util.parseInt(req.getParameter("groupID"));
         Integer memberID = Util.parseInt(req.getParameter("memberID"));
 
-        System.out.println("groupID = " + groupID);
-        System.out.println("memberID = " + memberID);
-
         if (groupID == null || memberID == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            System.out.println("invalid ids");
             out.write("Invalid IDs");
         } else {
             try {
                 agendaDAO.removeGroupMember(groupID, memberID);
             } catch (SQLException e) {
-                System.out.println("error eliminar miembro");
                 resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 resp.getWriter().write("Error al eliminar al miembro: " + e.getMessage());
             }

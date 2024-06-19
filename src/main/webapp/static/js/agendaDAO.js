@@ -47,7 +47,8 @@ function removeGroup(id) {
 
 /**
  * Eliminar un miembro de un grupo
- * @param id id del grupo a eliminar
+ * @param memberId Id del contacto
+ * @param groupId Id del grupo
  */
 function removeGroupMember(groupId, memberId) {
     const xhr = new XMLHttpRequest();

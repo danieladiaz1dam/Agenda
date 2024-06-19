@@ -3,7 +3,11 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page pageEncoding="UTF-8" %>
 
-<% String baseUrl = request.getContextPath(); %>
+<%
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    List<Contact> contactList = (List) request.getAttribute("contactList");
+    String baseUrl = request.getContextPath();
+%>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -24,11 +28,8 @@
             <div id="wrapper">
                 <h1>Contactos</h1>
                 <%
-                    @SuppressWarnings({"unchecked", "rawtypes"})
-                    List<Contact> contactList = (List) request.getAttribute("contactList");
-
                     if (contactList == null || contactList.isEmpty()) {
-                        out.println("<h1>No tienes contactos!<h1>");
+                        out.println("<h2>No tienes contactos!<h2>");
                     } else {
                 %>
                 <table>

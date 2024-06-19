@@ -26,7 +26,8 @@
         <link rel="stylesheet" href="<%= baseUrl %>/static/css/theme.css">
         <link rel="stylesheet" href="<%= baseUrl %>/static/css/contactDetails.css">
         <script src="<%= baseUrl %>/static/js/agendaDAO.js"></script>
-        <title>Detalles de <%= contact.getName() %></title>
+        <title>Detalles de <%= contact.getName() %>
+        </title>
     </head>
     <body>
         <%@include file="navbar.jsp" %>
@@ -41,11 +42,15 @@
                         <h1>
                             <%= contact.getName() %>
                         </h1>
-                        <a><span style="font-size: 2rem; top: 8px"
-                                 class="material-symbols-rounded <%= favoriteClass %>"> favorite </span></a>
-                        <a class="button" id="edit-btn" href="editContact?id=<%= contact.getID() %>"><span
-                                style="position: relative; top: 4px; left: 2px">Edit</span></a>
-                        <a class="button" onclick="removeContact(<%= contact.getID() %>)"><span class="material-symbols-rounded"> delete </span></a>
+                        <a>
+                            <span style="font-size: 2rem; top: 8px" class="material-symbols-rounded <%= favoriteClass %>"> favorite </span>
+                        </a>
+                        <a class="button" id="edit-btn" href="editContact?id=<%= contact.getID() %>">
+                            <span style="position: relative; top: 4px; left: 2px">Edit</span>
+                        </a>
+                        <a class="button" onclick="removeContact(<%= contact.getID() %>)">
+                            <span class="material-symbols-rounded"> delete </span>
+                        </a>
                     </div>
 
                     <h3>Detalles del Contacto</h3>

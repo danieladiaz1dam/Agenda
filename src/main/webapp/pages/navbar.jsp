@@ -7,6 +7,7 @@
 
     boolean isContactPage = pageName.equals("listContacts.jsp") || pageName.equals("contactDetails.jsp");
     boolean isGroupPage = pageName.equals("listGroups.jsp") || pageName.equals("groupDetails.jsp");
+    boolean isAboutPage = pageName.equals("about.jsp");
 %>
 
 <nav class="navbar">
@@ -32,22 +33,10 @@
                 <span class="link-text">Grupos</span>
             </a>
         </li>
-        <li class="nav-item">
-            <a href="" class="nav-link">
+        <li class="nav-item <%= isAboutPage ? "active" : "" %>">
+            <a href="<%= path %>/about" class="nav-link">
                 <span class="material-symbols-rounded"> info </span>
                 <span class="link-text">About</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="" class="nav-link">
-                <span class="material-symbols-rounded fill"> light_mode </span>
-                <span class="link-text">Theme</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="" class="nav-link">
-                <span class="material-symbols-rounded fill"> logout </span>
-                <span class="link-text">Cerrar Sesión</span>
             </a>
         </li>
     </ul>

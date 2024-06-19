@@ -1,5 +1,6 @@
 package com.daniela.agendadaniela;
 
+
 import com.daniela.classes.*;
 
 import javax.naming.Context;
@@ -10,11 +11,14 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Clase que se comunica directamente con la base de datos
+ */
 public class AgendaDAO {
     /**
      * Objeto de tomcat que contiene los datos necesarios para una conexión con la base de datos
      */
-    private final DataSource dataSource;
+    private final DataSource DATA_SOURCE;
 
     /**
      * Conexión obtenida después de procesar el dataSource
@@ -30,7 +34,7 @@ public class AgendaDAO {
     public AgendaDAO() throws NamingException {
         // Coger la conexión del archivo context.xml
         Context initContext = new InitialContext();
-        this.dataSource = (DataSource) initContext.lookup("java:comp/env/jdbc/agenda");
+        this.DATA_SOURCE = (DataSource) initContext.lookup("java:comp/env/jdbc/agenda");
     }
 
     /**
@@ -38,7 +42,7 @@ public class AgendaDAO {
      *
      * @throws SQLException Es lanzada si se encuentra algún error al cerrar la base de datos
      */
-    public void disconnect() throws SQLException {
+    private void disconnect() throws SQLException {
         if (connection != null && !connection.isClosed())
             connection.close();
     }
@@ -49,12 +53,12 @@ public class AgendaDAO {
      * @return true si se pudo conectar, false en caso contrario
      * @throws SQLException Es lanzada si ocurre algún error al acceder a la base de datos o al intentar conectarse
      */
-    public boolean connect() throws SQLException {
+    private boolean connect() throws SQLException {
         boolean res = false;
 
         if (connection == null || connection.isClosed()) {
             try {
-                connection = dataSource.getConnection();
+                connection = DATA_SOURCE.getConnection();
                 res = true;
             } catch (SQLException e) {
                 throw new RuntimeException(e);
@@ -287,7 +291,7 @@ public class AgendaDAO {
      * @return Devuelve un objeto ContactDetails sin Emails, Phones o Addresses
      * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
      */
-    private ContactDetails getContact(ResultSet rs, int ID) throws SQLException {
+    private ContactDetails getContactBasicDetails(ResultSet rs, int ID) throws SQLException {
         String name;
         String birthday;
         String creationDate;
@@ -309,7 +313,28 @@ public class AgendaDAO {
     }
 
     /**
-     * Devuelve la lista de teléfonos de un contacto
+     * Añade la lista de emails a un contacto
+     *
+     * @param rs             ResultSet de una consulta anteriór ya enviada y ejecutada
+     * @param contactDetails Objeto al que añadir la lista de emails
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
+    private void getEmails(ResultSet rs, ContactDetails contactDetails) throws SQLException {
+        int id;
+        String email;
+        String category;
+
+        while (rs.next()) {
+            id = rs.getInt("emailID");
+            email = rs.getString("email");
+            category = rs.getString("category");
+
+            contactDetails.getEmails().add(new Email(id, email, category));
+        }
+    }
+
+    /**
+     * Añade la lista de teléfonos a un contacto
      *
      * @param rs             ResultSet de una consulta anteriór ya enviada y ejecutada
      * @param contactDetails Objeto al que añadir la lista de teléfonos
@@ -332,28 +357,7 @@ public class AgendaDAO {
     }
 
     /**
-     * Devuelve la lista de emails de un contacto
-     *
-     * @param rs             ResultSet de una consulta anteriór ya enviada y ejecutada
-     * @param contactDetails Objeto al que añadir la lista de emails
-     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
-     */
-    private void getEmails(ResultSet rs, ContactDetails contactDetails) throws SQLException {
-        int id;
-        String email;
-        String category;
-
-        while (rs.next()) {
-            id = rs.getInt("emailID");
-            email = rs.getString("email");
-            category = rs.getString("category");
-
-            contactDetails.getEmails().add(new Email(id, email, category));
-        }
-    }
-
-    /**
-     * Devuelve la lista de direcciones de un contacto
+     * Añade la lista de direcciones a un contacto
      *
      * @param rs             ResultSet de una consulta anteriór ya enviada y ejecutada
      * @param contactDetails Objeto al que añadir la lista de direcciones
@@ -371,11 +375,11 @@ public class AgendaDAO {
             id = rs.getInt("addressID");
             street = rs.getString("street");
             houseNumber = rs.getString("houseNumber");
-            city = rs.getString("city");
             zip = rs.getString("zip");
+            city = rs.getString("city");
             category = rs.getString("category");
 
-            contactDetails.getAddresses().add(new Address(id, street, houseNumber, city, zip, category));
+            contactDetails.getAddresses().add(new Address(id, street, houseNumber, zip, city, category));
         }
     }
 
@@ -400,7 +404,7 @@ public class AgendaDAO {
                     switch (resultSetCounter) {
                         // Primer conjunto, Detalles del contacto
                         case 1:
-                            contactDetails = getContact(rs, ID);
+                            contactDetails = getContactBasicDetails(rs, ID);
                             break;
                         // Segundo conjunto, Teléfonos del Contacto
                         case 2: {
@@ -444,6 +448,40 @@ public class AgendaDAO {
         if (connect()) {
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("exec dbo.getTags");
+
+            while (rs.next()) {
+                ID = rs.getInt("ID");
+                name = rs.getString("name");
+
+                tagList.add(new Tag(ID, name));
+            }
+
+            rs.close();
+            stmt.close();
+            disconnect();
+        } else System.out.println("Failed to connect!!");
+
+        return tagList;
+    }
+
+    /**
+     * Devuelve una lista de Tags disponibles para un contacto en concreto
+     *
+     * @param contactID Id del contacto
+     * @return Devuelve una lista de Tags
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
+    public List<Tag> getAvailableTags(int contactID) throws SQLException {
+        List<Tag> tagList = new ArrayList<>();
+
+        int ID;
+        String name;
+
+        if (connect()) {
+            PreparedStatement stmt = connection.prepareStatement("exec dbo.getAvailableTags ?");
+            stmt.setInt(1, contactID);
+
+            ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
                 ID = rs.getInt("ID");
@@ -538,7 +576,7 @@ public class AgendaDAO {
     private void insertEmails(List<Email> emails, int id) throws SQLException {
         String query;
         PreparedStatement stmt;
-        query = "INSERT INTO dbo.Email (idContact, email, category) VALUES (?, ?, ?)";
+        query = "insert into dbo.Email (idContact, email, category) VALUES (?, ?, ?)";
         stmt = connection.prepareStatement(query);
 
         for (Email email : emails) {
@@ -562,7 +600,7 @@ public class AgendaDAO {
     private void insertPhones(List<Phone> phones, int id) throws SQLException {
         PreparedStatement stmt;
         String query;
-        query = "INSERT INTO dbo.Phone (idContact, countryCode, phone, category) VALUES (?, ?, ?, ?)";
+        query = "insert into dbo.Phone (idContact, countryCode, phone, category) values (?, ?, ?, ?)";
         stmt = connection.prepareStatement(query);
 
         for (Phone phone : phones) {
@@ -587,7 +625,7 @@ public class AgendaDAO {
     private void insertAddresses(List<Address> addresses, int id) throws SQLException {
         String query;
         PreparedStatement stmt;
-        query = "INSERT INTO dbo.Address (idContact, street, houseNumber, city, zip, category) VALUES (?, ?, ?, ?, ?, ?)";
+        query = "insert into dbo.Address (idContact, street, houseNumber, city, zip, category) values (?, ?, ?, ?, ?, ?)";
         stmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 
         for (Address address : addresses) {
@@ -618,7 +656,7 @@ public class AgendaDAO {
             // No hacer el commit hasta que yo lo diga
             connection.setAutoCommit(false);
             // Insertar contacto
-            String query = "INSERT INTO dbo.Contact (name, birthday) VALUES (?, ?)";
+            String query = "insert into dbo.Contact (name, birthday) values (?, ?)";
             PreparedStatement stmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             ResultSet rs;
             int id;
@@ -645,6 +683,14 @@ public class AgendaDAO {
                     // Insert Addresses
                     insertAddresses(contactDetails.getAddresses(), id);
 
+                    // Insertar Tags
+                    query = "exec insertContactTags ?, ?;";
+                    stmt = connection.prepareStatement(query);
+                    stmt.setInt(1, id );
+                    stmt.setString(2, contactDetails.getTags());
+
+                    stmt.executeUpdate();
+
                     // Una vez esté correctamente insertado, hacer el commit
                     connection.commit();
                     res = true;
@@ -657,11 +703,10 @@ public class AgendaDAO {
                 stmt.close();
             }
 
-
+            connection.setAutoCommit(true);
             disconnect();
         } else System.out.println("Failed to connect!!");
 
-        connection.setAutoCommit(true);
         return res;
     }
 
@@ -669,21 +714,83 @@ public class AgendaDAO {
      * Actualizar un contacto existente en la base de datos
      *
      * @param contactDetails Detalles nuevos para el contacto
-     * @return true si se pudo actualizar, false en caso contrario
      * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
      */
-    public boolean updateContact(ContactDetails contactDetails) throws SQLException {
-        boolean res = false;
+    public void updateContact(ContactDetails contactDetails, String deletedEmails, String deletedPhones, String deletedAddress) throws SQLException {
 
         if (connect()) {
-            // todo hacer el update
-            System.out.println("todo");
-        } else System.out.println("Failed to connect!!");
+            connection.setAutoCommit(false);
 
-        return res;
+            // Update contact details
+            String query = "exec updateContact ?, ?, ?, ?, ?, ?, ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setInt(1, contactDetails.getID());
+            stmt.setString(2, contactDetails.getName());
+            stmt.setString(3, contactDetails.getBirthday());
+            stmt.setBoolean(4, contactDetails.isFavorite());
+            stmt.setString(5, deletedEmails);
+            stmt.setString(6, deletedPhones);
+            stmt.setString(7, deletedAddress);
+
+            stmt.executeUpdate();
+
+            // Update emails
+            query = "exec updateEmail ?, ?, ?, ?";
+            stmt = connection.prepareStatement(query);
+
+            for (Email email : contactDetails.getEmails()) {
+                stmt.setInt(1, contactDetails.getID());
+                stmt.setInt(2, email.getID());
+                stmt.setString(3, email.getEmail());
+                stmt.setString(4, email.getCategory());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+
+            // Update phones
+            query = "exec updatePhone ?, ?, ?, ?, ?";
+            stmt = connection.prepareStatement(query);
+
+            for (Phone phone : contactDetails.getPhones()) {
+                stmt.setInt(1, contactDetails.getID());
+                stmt.setInt(2, phone.getID());
+                stmt.setString(3, phone.getCountryCode());
+                stmt.setString(4, phone.getNumber());
+                stmt.setString(5, phone.getCategory());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+
+            // Update addresses
+            query = "exec updateAddress ?, ?, ?, ?, ?, ?, ?";
+            stmt = connection.prepareStatement(query);
+
+            for (Address address : contactDetails.getAddresses()) {
+                stmt.setInt(1, contactDetails.getID());
+                stmt.setInt(2, address.getID());
+                stmt.setString(3, address.getStreet());
+                stmt.setString(4, address.getHouseNumber());
+                stmt.setString(5, address.getCity());
+                stmt.setString(6, address.getZip());
+                stmt.setString(7, address.getCategory());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+
+            connection.commit();
+            connection.setAutoCommit(true);
+        } else System.out.println("Failed to connect!!");
+        disconnect();
     }
 
-    public void removeGroupMember(Integer groupID, Integer memberID) throws SQLException {
+    /**
+     * Elimina a un contacto de un grupo
+     *
+     * @param groupID  Id del grupo
+     * @param memberID Id del contacto
+     * @throws SQLException Es lanzada si hay algún problema en la comunicación con la base de datos
+     */
+    public void removeGroupMember(int groupID, int memberID) throws SQLException {
         if (connect()) {
             String query = "exec dbo.removeGroupMember ?, ?;";
             PreparedStatement stmt = connection.prepareStatement(query);

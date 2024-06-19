@@ -5,7 +5,7 @@
     --bg-secondary: #fff;
     --color-primary: #e3c2ff;
     --color-primary-opacity: #e3c2ff90;
-    --color-secondary: #a20bd0;
+    --color-secondary: #ad3bd0;
     --color-tertiary: #d5c1e6;
     --color-fav: #f4a0dc;
     --font-primary: #222;
@@ -38,6 +38,10 @@ html {
     font-variation-settings: 'FILL' 1
 }
 
+.checked {
+    font-variation-settings: 'FILL' 1;
+    color: var(--color-fav);
+}
 
 /* ------------ NAVBAR ------------ */
 

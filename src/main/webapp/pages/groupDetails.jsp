@@ -35,14 +35,15 @@
                 <div style="max-width: var(--max-width);">
                     <div id="title">
                         <a class="button" href="<%= path %>/groups"><span
-                                class="material-symbols-rounded"> arrow_back </span>
+                            class="material-symbols-rounded"> arrow_back </span>
                         </a>
                         <h1>
                             <%= group.getName() %>
                         </h1>
-                        <a class="button" onclick="openDialog()"><span class="material-symbols-rounded"> person_add </span></a>
-                        <a class="button" onclick="removeGroup(<%= group.getId() %>)"><span
-                                class="material-symbols-rounded"> delete </span></a>
+                        <a id="addMemberDialogBtn" class="button" onclick="openDialog()"><span class="material-symbols-rounded"> person_add </span></a>
+                        <a id="removeGroupBtn" class="button" onclick="removeGroup(<%= group.getId() %>)">
+                            <span class="material-symbols-rounded"> delete </span>
+                        </a>
                     </div>
 
                     <h3 id="description">

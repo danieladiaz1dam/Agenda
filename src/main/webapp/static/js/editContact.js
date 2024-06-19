@@ -1,4 +1,6 @@
 // Esperar a que la página termine de cargar
+// noinspection JSUnresolvedReference
+
 document.addEventListener('DOMContentLoaded', function () {
     const favoriteCheckbox = document.getElementById('favorite');
     const favoriteLabel = document.getElementById('favorite-label');
@@ -12,23 +14,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // Lógica del checkbox <3
     favoriteCheckbox.addEventListener('change', () => {
         if (favoriteCheckbox.checked) {
-            favoriteSpan.style.color = 'var(--color-fav)';
-            favoriteSpan.classList.add('fill');
+            favoriteSpan.classList.add('checked');
         } else {
-            favoriteSpan.style.color = 'unset';
-            favoriteSpan.classList.remove('fill');
+            favoriteSpan.classList.remove('checked');
         }
     });
 
     // Actualizar el listado de tags
     tags.addEventListener('change', (e) => {
-        console.log(e.target.value)
-        if (e.target.value === 'add_new_tag') {
-            document.getElementById('newTagContainer').style.display = 'block';
-        } else {
-            addNewTag(e.target.value);
-            document.getElementById('newTagContainer').style.display = 'none';
-        }
+        addNewTag(e.target.value);
     });
 
     // Guardar las tags antes de enviar el form
@@ -74,45 +68,10 @@ function addNewTag(name) {
 function getCurrentTags() {
     // Devuelve un NodeList, el cual es más difícil de operar, así que lo paso a Array
     let currentTags = Array.from(document.getElementById("tagListContainer").childNodes);
-    currentTags.shift(); // Quitar el primer elemento, ya que no es válido
+    // Quitar saltos de línea
+    currentTags.shift();
+    currentTags.pop()
     return currentTags;
-}
-
-/**
- * Comprueba si una tag existe
- * @param name Nombre de la Tag
- * @returns {boolean} true si existe, false en caso contrario
- */
-function checkIfTagExists(name) {
-    let currentTags = getCurrentTags();
-
-    let i = 0;
-    let found = false;
-
-    while (!found && i < currentTags.length) {
-        if (currentTags[i].innerHTML === name)
-            found = true;
-        i++;
-    }
-
-    return found;
-}
-
-/**
- * Añade una tag personalizada si no existe.
- */
-function createNewTag() {
-    let newTagInput = document.getElementById('newTag');
-    const tags = document.getElementById('tagSelect');
-
-    if (!checkIfTagExists(newTagInput.value)) {
-        addNewTag(newTagInput.value);
-    }
-
-    newTagInput.value = "";
-
-    tags.selectedIndex = 0;
-    tags.dispatchEvent(new Event('change'));
 }
 
 /**
@@ -131,8 +90,34 @@ function removeTag(elem) {
  * Elimina un elemento HTML
  * (Usado para eliminar manualmente los campos)
  * @param elem Elemento a eliminar
+ * @param type Tipo de elemento que hemos borrado
+ * @param id Id del elemento borrado, blank si es nulo
  */
-function removeField(elem) {
+function removeField(elem, type, id) {
+    elem.remove()
+    let deletedEmails = document.getElementById("deletedEmails");
+    let deletedPhones = document.getElementById("deletedPhones");
+    let deletedAddresses = document.getElementById("deletedAddresses");
+
+    switch (type) {
+        case "email":
+            deletedEmails.value += id + ',';
+            break;
+        case "phone":
+            deletedPhones.value += id + ',';
+            break;
+        case "address":
+            deletedAddresses.value += id + ',';
+            break;
+    }
+}
+
+/**
+ * Elimina un elemento HTML
+ * (Usado para eliminar manualmente los campos)
+ * @param elem Elemento a eliminar
+ */
+function removeNewField(elem) {
     elem.remove()
 }
 
@@ -145,11 +130,12 @@ function addEmail() {
     let p = document.createElement('p');
     p.className = 'field';
     p.innerHTML = `
+        <input type="hidden" name="emailIDs" value="-1">
         <input type="text" name="emails" placeholder="Email" required>
         <span class="gap10"></span>
-        <input type="text" name="emailCategories" placeholder="Category" required>
+        <input type="text" name="emailCategories" placeholder="Categoría" required>
 
-        <button class="remove-field" type="button" onclick="removeField(this.parentNode)">
+        <button class="remove-field" type="button" onclick="removeNewField(this.parentNode)">
             <span class="material-symbols-rounded"> close </span>
         </button>
     `;
@@ -166,13 +152,14 @@ function addPhone() {
     let p = document.createElement('p');
     p.className = 'field';
     p.innerHTML = `
+        <input type="hidden" name="phoneIDs" value="-1">
         <input class="small-field" type="number" name="countryCodes" placeholder="+34" pattern="\\d*" min="1" required>
         <span class="gap10"></span>
         <input type="number" name="phones" placeholder="Telephone" pattern="\\d*" min="100000000" max="999999999" required>
         <span class="gap10"></span>
-        <input type="text" name="phoneCategories" placeholder="Category" required>
+        <input type="text" name="phoneCategories" placeholder="Categoría" required>
 
-        <button class="remove-field" type="button" onclick="removeField(this.parentNode)">
+        <button class="remove-field" type="button" onclick="removeNewField(this.parentNode)">
             <span class="material-symbols-rounded"> close </span>
         </button>
     `;
@@ -191,10 +178,11 @@ function addAddress() {
 
     div.innerHTML = `
         <p class="field">
+            <input type="hidden" name="addressIDs" value="-1">
             <input type="text" name="streets" placeholder="Calle" required>
             <span class="gap10"></span>
             <input class="small-field" type="text" name="houseNumbers" placeholder="Num." pattern="\\d*" min="1" required>
-            <button class="remove-field" type="button" onclick="removeField(this.parentNode.parentNode)">
+            <button class="remove-field" type="button" onclick="removeNewField(this.parentNode.parentNode)">
                 <span class="material-symbols-rounded"> close </span>
             </button>
         </p>
@@ -204,7 +192,7 @@ function addAddress() {
             <input class="small-field" type="number" name="zipCodes" placeholder="CP" pattern="\\d*" min="10000" max="99999" required>
         </p>
         <p class="field">
-            <input type="text" name="addressCategories" placeholder="Category" required>
+            <input type="text" name="addressCategories" placeholder="Categoría" required>
         </p>
     `;
 

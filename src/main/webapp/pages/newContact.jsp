@@ -1,7 +1,6 @@
 <%@ page import="java.time.Year" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.daniela.classes.Tag" %>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%
@@ -9,6 +8,9 @@
     final String[] MESES = {"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
 
     String baseUrl = request.getContextPath();
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    List<Tag> tags = (List) request.getAttribute("tagList");
 %>
 
 <!DOCTYPE html>
@@ -20,7 +22,7 @@
               href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"/>
         <link rel="stylesheet" href="<%= baseUrl %>/static/css/theme.css">
         <link rel="stylesheet" href="<%= baseUrl %>/static/css/newContact.css">
-        <script src="<%= baseUrl %>/static/js/newContact.js"></script>
+        <script src="<%= baseUrl %>/static/js/contactForm.js"></script>
         <title>Nuevo Contacto</title>
     </head>
     <body>
@@ -44,7 +46,8 @@
                     <select id="tagSelect" name="tags">
                         <option value="" disabled selected hidden>Tag</option>
                         <%
-                            List<Tag> tags = (List) request.getAttribute("tagList");
+
+
                             for (Tag tag : tags) {
                         %>
                         <option value="<%= tag.getName() %>"><%= tag.getName() %>
