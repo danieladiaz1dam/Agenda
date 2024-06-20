@@ -18,11 +18,6 @@
     @SuppressWarnings({"unchecked", "rawtypes"})
     List<Tag> availableTags = (List) request.getAttribute("availableTags");
 
-    // Tags actuales del contacto
-    String[] tags = {};
-    if (!contact.getTags().isBlank())
-        tags = contact.getTags().split(",");
-
     // Dividir el String de la fecha en tres números con substrings y parseInt
     String birthday = contact.getBirthday();
     Integer day = -1, month = -1, year = -1;

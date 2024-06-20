@@ -770,8 +770,8 @@ public class AgendaDAO {
                 stmt.setInt(2, address.getID());
                 stmt.setString(3, address.getStreet());
                 stmt.setString(4, address.getHouseNumber());
-                stmt.setString(5, address.getCity());
-                stmt.setString(6, address.getZip());
+                stmt.setString(5, address.getZip());
+                stmt.setString(6, address.getCity());
                 stmt.setString(7, address.getCategory());
                 stmt.addBatch();
             }

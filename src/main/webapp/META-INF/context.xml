@@ -5,7 +5,7 @@
             auth="Container"
             type="javax.sql.DataSource"
             driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-            url="jdbc:sqlserver://localhost:1444;databaseName=Agenda;encrypt=true;trustServerCertificate=true;"
+            url="jdbc:sqlserver://172.20.10.2:1444;databaseName=Agenda;encrypt=true;trustServerCertificate=true;"
             maxTotal="20"
             maxIdle="10"
             initialSize="5"

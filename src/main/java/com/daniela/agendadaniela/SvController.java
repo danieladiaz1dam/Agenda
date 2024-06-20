@@ -192,7 +192,7 @@ public class SvController extends HttpServlet {
         String[] cities = req.getParameterValues("cities");
         String[] zipCodes = req.getParameterValues("zipCodes");
         String[] addressCategories = req.getParameterValues("addressCategories");
-        ArrayList<Address> addressList = Util.addressesFromArrays(addressIDs, streets, houseNumbers, cities, zipCodes, addressCategories);
+        ArrayList<Address> addressList = Util.addressesFromArrays(addressIDs, streets, houseNumbers, zipCodes, cities, addressCategories);
 
         /*out.println("New emailList = " + emailList);
         out.println("New phoneList = " + phoneList);

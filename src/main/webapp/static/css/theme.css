@@ -81,11 +81,6 @@ html {
     justify-content: center;
 }
 
-.nav-item:last-child {
-    margin-top: auto;
-    margin-bottom: 20px;
-}
-
 .nav-link {
     display: flex;
     align-items: center;
